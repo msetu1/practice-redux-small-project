@@ -1,6 +1,7 @@
 import { RootState } from "@/redux/store";
 import { ITask } from "@/type";
 import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
+import { removeUser } from "../user/userSlice";
 interface InitialState {
   tasks: ITask[];
   filter: "All" | "Low" | "Medium" | "High";
@@ -8,24 +9,26 @@ interface InitialState {
 
 const initialState: InitialState = {
   tasks: [
-    // {
-    //   id: "1",
-    //   title: "Complete React Project",
-    //   description:
-    //     "Finish the final module of the React project and test all components.",
-    //   dueDate: "2025-02-05",
-    //   isCompleted: false,
-    //   priority: "High",
-    // },
-    // {
-    //   id: "2",
-    //   title: "Write Blog Post",
-    //   description:
-    //     "Draft a blog post on JavaScript ES6 features and submit for review.",
-    //   dueDate: "2025-02-07",
-    //   isCompleted: false,
-    //   priority: "Medium",
-    // },
+    {
+      id: "1",
+      title: "Complete React Project",
+      description:
+        "Finish the final module of the React project and test all components.",
+      dueDate: "2025-02-05",
+      isCompleted: false,
+      priority: "High",
+      assignedTo: null,
+    },
+    {
+      id: "2",
+      title: "Write Blog Post",
+      description:
+        "Draft a blog post on JavaScript ES6 features and submit for review.",
+      dueDate: "2025-02-07",
+      isCompleted: false,
+      priority: "Medium",
+      assignedTo: null,
+    },
     // {
     //   id: "3",
     //   title: "Fix Backend API Issues",
@@ -57,9 +60,17 @@ const initialState: InitialState = {
   filter: "All",
 };
 
-type DraftTask = Pick<ITask, "title" | "description" | "dueDate" | "priority"| "assignedTo">;
+type DraftTask = Pick<
+  ITask,
+  "title" | "description" | "dueDate" | "priority" | "assignedTo"
+>;
 const createTask = (taskData: DraftTask): ITask => {
-  return { id: nanoid(), isCompleted: false, ...taskData };
+  return {
+    ...taskData,
+    id: nanoid(),
+    isCompleted: false,
+    assignedTo: taskData.assignedTo ? taskData.assignedTo : null,
+  };
 };
 
 const taskSlice = createSlice({
@@ -83,12 +94,20 @@ const taskSlice = createSlice({
     deleteTask: (state, action: PayloadAction<string>) => {
       state.tasks = state.tasks.filter((task) => task.id !== action.payload);
     },
+    // filter
     updateFilter: (
       state,
       action: PayloadAction<"All" | "Low" | "Medium" | "High">
     ) => {
       state.filter = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(removeUser, (state, action) => {
+      state.tasks.forEach((task) =>
+        task.assignedTo === action.payload ? (task.assignedTo = null) : task
+      );
+    });
   },
 });
 
